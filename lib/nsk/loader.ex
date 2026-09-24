@@ -23,6 +23,7 @@ defmodule Nsk.Loader do
   """
   @spec fetch(String.t(), keyword()) :: {:ok, Path.t()} | {:error, term()}
   def fetch(name, opts \\ []) do
+    ensure_req_started!()
     on_status = Keyword.get(opts, :on_status, fn _msg -> :ok end)
 
     case latest_release(name) do
@@ -42,6 +43,21 @@ defmodule Nsk.Loader do
   def cache_dir do
     base = System.get_env("NERVES_DL_DIR") || Path.join(System.user_home!(), ".nerves/dl")
     Path.join(base, "usb_fel_loaders")
+  end
+
+  # `Mix.Task.run("app.start")` is not enough. The README has people depend on
+  # this with `runtime: false`, which keeps `:nsk` and everything under it out of
+  # the application list — so `app.start` starts neither `:req` nor the `:finch`
+  # underneath it, and the first request fails with `unknown registry:
+  # Req.Finch` from inside Finch's pool manager.
+  defp ensure_req_started! do
+    case Application.ensure_all_started(:req) do
+      {:ok, _apps} ->
+        :ok
+
+      {:error, reason} ->
+        raise "could not start :req to download the loader: #{inspect(reason)}"
+    end
   end
 
   defp latest_release(name) do
