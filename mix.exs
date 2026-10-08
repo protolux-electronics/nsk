@@ -23,7 +23,7 @@ defmodule Nsk.MixProject do
     [
       {:circuits_uart, "~> 1.0"},
       {:req, "~> 0.5"},
-      {:sunxi, "~> 0.1"}
+      {:sunxi, "~> 0.2.2"}
     ]
   end
 end
